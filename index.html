@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>＋＋谈</title>
+    <style>
+      *::selection {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+      body {
+        margin: 0;
+      }
+      #mask {
+        z-index: 100;
+        position: absolute;
+        width: 100%;
+        transition: opacity 1s;
+      }
+      #mask,
+      #app {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #ffd54f;
+        font-family: Helvetica, 'Hiragino Sans GB', 'Microsoft Yahei', '微软雅黑', Arial, sans-serif;;
+        color: #333;
+      }
+      .progress {
+        --size: 50px;
+        width: var(--size);
+        height: var(--size);
+        position: relative;
+      }
+      .progress::before {
+        --size: 25%;
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: var(--size);
+        height: var(--size);
+        animation: loading 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0s infinite;
+        background-color: #333;
+        border-radius: 25%;
+      }
+      @keyframes loading {
+        25% { left: 75%; top: 0; transform: scale(0.8, 1); }
+        50% { left: 75%; top: 75%; transform: scale(1, 0.8); }
+        75% { left: 0; top: 75%; transform: scale(0.8, 1); }
+        100% { left: 0; top: 0; transform: scale(1, 0.8); }
+      }
+      .countdown {
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: flex-start;
+        align-items: center;
+      }
+      .countdown .title {
+        font-size: 5vmin;
+        letter-spacing: 1vmin;
+      }
+      .countdown .main {
+        display: flex;
+        flex-flow: row nowrap;
+        justify-content: flex-start;
+        align-items: center;
+      }
+      .countdown .main .item {
+        flex-flow: column nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 2vmin;
+      }
+      .countdown .main .item .p1 {
+        font-size: 10vmin;
+        text-align: center;
+      }
+      .countdown .main .item .p2 {
+        font-size: 4vmin;
+        text-align: center;
+      }
+      .ball {
+        --size: 3vmin;
+        width: var(--size);
+        height: var(--size);
+        background-color: #333;
+        border-radius: calc(var(--size) / 4);
+        animation: shining 3s ease-in-out 0s infinite alternate;
+        transition: all 1s, height 1s cubic-bezier(0, 0.55, 0.45, 1), width 1s cubic-bezier(0, 0.55, 0.45, 1);
+        opacity: 0.3;
+        transform: scale(0.75);
+        overflow: hidden;
+        box-shadow: 0.4vmin 0.4vmin 1vmin -0.5vmin black;
+      }
+      .ball:hover {
+        opacity: 1;
+        transform: scale(1);
+        animation: none;
+        width: 30vmin;
+        height: 30vmin;
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+      @keyframes shining {
+        0% { opacity: 0.3; transform: scale(0.75); }
+        80% { opacity: 1; transform: scale(1); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+      .ball .content {
+        opacity: 0;
+        color: #333;
+        display: flex;
+        flex-flow: column nowrap;
+        transition: opacity 1s 0.5s;
+        padding: 2vmin;
+        height: calc(100% - 4vmin);
+        width: calc(100% - 4vmin);
+        overflow-y: scroll;
+      }
+      .ball .content::-webkit-scrollbar {
+        display: none;
+      }
+      .ball:hover .content {
+        opacity: 1;
+      }
+      .record {
+        display: flex;
+        flex-flow: row nowrap;
+        align-items: baseline;
+        width: 100%;
+        font-size: 2.5vmin;
+        margin: 1vmin;
+      }
+      .record .rtime {
+        width: 15vmin;
+        text-align: left;
+      }
+      .record .rday {
+        width: 9vmin;
+        text-align: right;
+      }
+      .arrow {
+        position: fixed;
+        left: 1vmin;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4vmin;
+        height: 2vmin;
+        border-radius: 0.5vmin;
+        box-shadow: 0px 0px 0.3vmin 0vmin #333;
+        cursor: pointer;
+        animation: waving 1s ease-in-out 0s infinite alternate;
+        z-index: 10;
+      }
+      @keyframes waving {
+        from { box-shadow: 0px 0px 0.3vmin 0vmin #333; }
+        to { box-shadow: 0px 0px 1vmin 0vmin #333; }
+      }
+      .arrow:hover ~ .side-content {
+        left: 7vmin;
+        opacity: 1;
+      }
+      .side-content {
+        position: fixed;
+        width: 40%;
+        min-width: 300px;
+        left: -100%;
+        top: 50%;
+        transform: translateY(-50%);
+        backdrop-filter: blur(1em);
+        border-radius: 3vmin;
+        box-shadow: 0px 0px 2vmin -1vmin black;
+        opacity: 0;
+        transition: left 1s cubic-bezier(0.22, 1, 0.36, 1), opacity 1s linear;
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: center;
+      }
+      .qrcode {
+        width: calc(0.27 * 30vmin * 3);
+        height: calc(0.37 * 30vmin * 3);
+        background-image: url(https://nju-cat.oss-cn-hangzhou.aliyuncs.com/story/story.jpg);
+        background-repeat: no-repeat;
+        background-size: contain;
+        float: left;
+        margin: 1vmin;
+      }
+      .introduction {
+        padding: 2.5vmin;
+      }
+      .introduction p {
+        margin: 0.5vmin;
+        text-indent: 2em;
+        font-size: 2vmin;
+        letter-spacing: 0.2vmin;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mask"><div class="progress"></div></div>
+    <div id="app">
+      <div v-if="status === 0" class="countdown">
+        <div class="title">距离＋＋谈消失剩下</div>
+        <div class="main">
+          <div class="item">
+            <div class="p1">{{ day }}</div>
+            <div class="p2">天</div>
+          </div>
+          <div class="item">
+            <div class="p1">{{ hour }}</div>
+            <div class="p2">时</div>
+          </div>
+          <div class="item">
+            <div class="p1">{{ minute }}</div>
+            <div class="p2">分</div>
+          </div>
+          <div class="item">
+            <div class="p1">{{ second }}</div>
+            <div class="p2">秒</div>
+          </div>
+        </div>
+        <div class="ball">
+          <div class="content">
+            <div v-for="r in record" class="record">
+              <div class="rtime">{{ new Date(r.incTime).toLocaleDateString() }}</div>
+              <div class="rday">+{{ r.incDay }} 天</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="arrow"></div>
+      <div class="side-content">
+        <div class="introduction">
+          <div class="qrcode"></div>
+          <p>1348年，意大利佛罗伦萨瘟疫流行，10名男女在乡村一所别墅里避难，每人每天讲一个故事，共住了10天讲了百个故事。(《十日谈》）</p>
+          <p>2020年，新冠肺炎席卷全球，无数学子在各地"加里敦大学"里避难，百无聊赖，群友每天讲自己的故事，直到没有人再讲述。</p>
+          <p>每个人的生活经历都是一部小说，其中无数故事，把其中想与人分享的几个摘下来讲一讲，或是引起共鸣，或是抒发感慨，或是寻求帮助…又或者，只是单纯想与人分享。讲好自己的故事，是对自己过往的反思和总结。采用一个好的叙述方式，甚至会改变自己以往对一些不悦经历的看法。</p>
+          <p>突发奇想，想建一个＋＋日谈群(可匿名)，最初将在十日后解散，每有人讲一个故事，群解散日期就＋＋(增加一天)，或许你有故事？又或许，你想当一个倾听者？又或许，你想结交几个网友hhh</p>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    const server = "http://106.15.248.13:8080";
+    // const server = "http://localhost:5500";
+    new Vue({
+      el: "#app",
+      data: {
+        status: 2,
+        last: 0,
+        record: [],
+      },
+      mounted: function() {
+        axios.get(server + "/api/timer/endTimestamp").then(res => {
+          if (res.status === 200 && res.data.code === 0) {
+            this.status--;
+            this.last = Math.round(res.data.data - new Date().getTime() / 1000);
+          }
+        });
+        axios.get(server + "/api/timer/record").then(res => {
+          if (res.status === 200 && res.data.code === 0) {
+            this.status--;
+            this.record = res.data.data;
+          }
+        });
+      },
+      methods: {
+        align: function(s) {
+          s = s.toString();
+          if (s.length >= 2) return s;
+          else return "0" + s;
+        }
+      },
+      computed: {
+        day: function() { return Math.floor(this.last / (24 * 3600)); },
+        hour: function() { return this.align(Math.floor(this.last % (24 * 3600) / 3600)); },
+        minute: function() { return this.align(Math.floor(this.last % 3600 / 60)); },
+        second: function() { return this.align(this.last % 60); }
+      },
+      watch: {
+        status: function(val) {
+          const delay = 1000;
+          if (val === 0) {
+            setInterval(() => {
+              this.last--;
+            }, 1000);
+            setTimeout(() => {
+              document.querySelector("#mask").style.opacity = "0";
+              setTimeout(() => {
+                document.querySelector("#mask").style.display = "none";
+              }, delay);
+            }, delay);
+          }
+        },
+      }
+    });
+  </script>
+</html>
