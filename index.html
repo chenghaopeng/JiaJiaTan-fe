@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>＋＋谈</title>
     <style>
+      * {
+        --dark-color: #333;
+        --light-color: #ffd54f;
+      }
       *::selection {
         background-color: rgba(0, 0, 0, 0.1);
       }
@@ -196,6 +200,89 @@
         font-size: 2vmin;
         letter-spacing: 0.2vmin;
       }
+      .switch {
+        position: fixed;
+        font-weight: bold;
+        color: var(--dark-color);
+        font-size: 5vmin;
+        right: 1vmin;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 25;
+        transition: 1s ease-in-out;
+        cursor: pointer;
+      }
+      .stories ~ .switch {
+        color: var(--light-color);
+      }
+      .stories {
+        position: fixed;
+        z-index: 20;
+        height: 100vh;
+        width: 100%;
+        left: 0;
+        top: 0;
+        background-color: var(--dark-color);
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 10vmin;
+        overflow-y: scroll;
+        box-sizing: border-box;
+        color: var(--light-color);
+      }
+      .stories::-webkit-scrollbar {
+        display: none;
+      }
+      .fade-enter-active, .fade-leave-active {
+        transition: opacity 1s ease-in-out;
+      }
+      .fade-enter, .fade-leave-to {
+        opacity: 0;
+      }
+      .story {
+        max-width: 1200px;
+        width: 70%;
+        padding: 3vmin;
+        display: flex;
+        flex-flow: column nowrap;
+        border: 0.2vmin solid var(--light-color);
+        border-radius: 3vmin;
+        margin: 2vmin auto;
+      }
+      .story .story-name {
+        font-size: 4vmin;
+        opacity: 0.9;
+        letter-spacing: 1vmin;
+      }
+      .story .story-time {
+        font-size: 2.5vmin;
+        opacity: 0.6;
+        letter-spacing: 0.5vmin;
+      }
+      .story .story-content {
+        margin-top: 2vmin;
+        line-height: 5vmin;
+        font-size: 3vmin;
+        opacity: 0.8;
+        letter-spacing: 0.5vmin;
+      }
+      .story-progress {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1vmin;
+        background-color: var(--light-color);
+        animation: slidein 1s cubic-bezier(0.22, 1, 0.36, 1) 1s 1 backwards;
+        transition: 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        opacity: 1;
+      }
+      @keyframes slidein {
+        0% { left: -100%; opacity: 0; }
+        100% { left: 0; opacity: 1; }
+      }
     </style>
   </head>
   <body>
@@ -229,6 +316,17 @@
             </div>
           </div>
         </div>
+        <transition name="fade">
+          <div v-if="viewStory" @scroll="story_scroll" class="stories">
+            <div v-for="story in stories" :key="story.time" class="story">
+              <div class="story-name">{{ story.name }}</div>
+              <div class="story-time">{{ new Date(story.time * 1000).toLocaleString() }}</div>
+              <div class="story-content">{{ story.content }}</div>
+            </div>
+            <div class="story-progress"></div>
+          </div>
+        </transition>
+        <div @click="switchView" class="switch">＋</div>
       </div>
     </div>
     <div class="side">
@@ -252,9 +350,11 @@
     new Vue({
       el: "#app",
       data: {
-        status: 2,
+        status: 3,
         last: 0,
         record: [],
+        stories: [],
+        viewStory: false,
       },
       mounted: function() {
         axios.get(server + "/api/timer/endTimestamp").then(res => {
@@ -269,13 +369,28 @@
             this.record = res.data.data;
           }
         });
+        axios.get(server + "/api/story/history").then(res => {
+          if (res.status === 200 && res.data.code === 0) {
+            this.status--;
+            this.stories = res.data.data;
+          }
+        });
       },
       methods: {
         align: function(s) {
           s = s.toString();
           if (s.length >= 2) return s;
           else return "0" + s;
-        }
+        },
+        switchView: function() {
+          this.viewStory = !this.viewStory;
+        },
+        story_scroll: function() {
+          let $stories = document.querySelector(".stories");
+          let $prgress = document.querySelector(".story-progress");
+          $prgress.style.width = (1 - $stories.scrollTop / ($stories.scrollHeight - $stories.clientHeight)) * 100 + "%";
+          $prgress.style.opacity = 1 - $stories.scrollTop / ($stories.scrollHeight - $stories.clientHeight);
+        },
       },
       computed: {
         day: function() { return Math.floor(this.last / (24 * 3600)); },
