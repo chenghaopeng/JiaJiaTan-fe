@@ -247,9 +247,14 @@
         padding: 3vmin;
         display: flex;
         flex-flow: column nowrap;
-        border: 0.2vmin solid var(--light-color);
         border-radius: 3vmin;
         margin: 2vmin auto;
+        transition: 1s ease-in-out;
+        opacity: 0.2;
+      }
+      .story.focus {
+        opacity: 1;
+        transform: scale(1.05);
       }
       .story .story-name {
         font-size: 4vmin;
@@ -280,7 +285,7 @@
         opacity: 1;
       }
       @keyframes slidein {
-        0% { left: -100%; opacity: 0; }
+        0% { left: -100%; opacity: 0.5; }
         100% { left: 0; opacity: 1; }
       }
     </style>
@@ -390,6 +395,15 @@
           let $prgress = document.querySelector(".story-progress");
           $prgress.style.width = (1 - $stories.scrollTop / ($stories.scrollHeight - $stories.clientHeight)) * 100 + "%";
           $prgress.style.opacity = 1 - $stories.scrollTop / ($stories.scrollHeight - $stories.clientHeight);
+          for (let i = 1; i <= this.stories.length; ++i) {
+            let $story = document.querySelector("#app > div > div.stories > div:nth-child(" + i + ")");
+            if ($stories.scrollTop + document.documentElement.clientHeight / 3 >= $story.offsetTop && $stories.scrollTop + document.documentElement.clientHeight / 3 <= $story.offsetTop + $story.clientHeight) {
+              $story.classList.add("focus");
+            }
+            else {
+              $story.classList.remove("focus");
+            }
+          }
         },
       },
       computed: {
@@ -413,6 +427,13 @@
             }, delay);
           }
         },
+        viewStory: function(val) {
+          if (val) {
+            setTimeout(() => {
+              this.story_scroll();
+            }, 1000);
+          }
+        }
       }
     });
   </script>
