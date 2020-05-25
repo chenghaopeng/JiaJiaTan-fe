@@ -347,7 +347,7 @@
               <div class="story-time">{{ new Date(story.time).toLocaleString() }}</div>
               <div class="story-content">{{ story.content }}</div>
             </div>
-            <div class="story">
+            <div class="story" id="story-end">
               <div class="story-name">{{last_page ? "故事，到此为止" : "故事，还在继续..."}}</div>
             </div>
             <div class="story-progress"></div>
@@ -457,6 +457,7 @@
             else $story.classList.add("focus");
           }
           if (scrolled >= 0.99) this.next_story_page();
+          document.querySelector("#story-end").classList.remove("focus");
         },
       },
       computed: {
